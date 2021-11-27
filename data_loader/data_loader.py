@@ -12,9 +12,11 @@ import numpy as np
 from torch.utils.data import Dataset, DataLoader, random_split
 from torch.utils.data.dataset import T_co
 from torchvision.io import read_image
-
-import constants
 from data_loader.transforms import Transform
+
+import sys
+sys.path.append("../")
+import constants
 
 
 class ASLDataset(Dataset):
@@ -60,7 +62,7 @@ class ASLDataset(Dataset):
 
 def get_datasets(directory: str,
                  set_sizes: List[int],
-                 transforms: Dict[str, Union[None, Transform, List[Transform]]]) -> Dict[str, List[ASLDataset]]:
+                 transforms: Dict[str, Union[None, Transform, List[Transform]]]) -> Dict[str, List[ASLDataset] ]:
     """
     Get datasets of given sizes, e.g. for training, validation, testing.
     :param directory: directory in which to find image files
