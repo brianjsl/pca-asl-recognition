@@ -14,7 +14,7 @@ from torch.utils.data.dataset import T_co
 from torchvision.io import read_image
 
 import constants
-from data.transforms import Transform
+from data_loader.transforms import Transform
 
 
 class ASLDataset(Dataset):

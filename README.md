@@ -1,8 +1,14 @@
-# pca-asl-recognition
-6.867 final project 2021
+# 6.867 Machine Learning Final Project (Fall 2021)
+By Brian Lee, Lilian Luong, and Srinath Mahankali
 
-## Instructions
-download the asl alphabet dataset from kaggle and put the training data folders (A-Z, space, del, nothing) in
-a folder called "asl_alphabet" inside the data directory
+## Description
+A comparison of the following models to predict static ASL sign language symbols:
 
-i.e. it should have data/asl_alphabet/A/A1.jpg
+*Convolutional Neural Networks (CNNs)
+*The PCA Algorithm(Eigenface Algorithm) with Kernel SVM and MLPs
+*Stable PCP with Kernel SVMs and MLPs
+*DenseNet
+
+## Additional Information
+Written in Pytorch
+Link to Paper: here
