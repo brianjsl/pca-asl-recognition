@@ -10,6 +10,7 @@ TODO: consider that the types of images are torch tensors, so any operations
 import abc
 
 import torch
+import numpy as np
 
 
 class Transform(abc.ABC):
@@ -30,3 +31,14 @@ class ExampleTransform(Transform):
     # invert image
     def __call__(self, sample: torch.Tensor):
         return 255 - sample
+
+class NormalNoise(Transform):
+    def __call__(self, sample: torch.Tensor):
+        weight = 10
+        noise = torch.randn(size = (3,200,200))
+        return (sample + weight*noise)/255
+
+class Rotate(Transform):
+    def __call__(self, sample: torch.Tensor):
+        theta = 1
+        pass
