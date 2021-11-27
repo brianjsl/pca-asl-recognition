@@ -27,7 +27,7 @@ cnn_transforms = {
     }
 
 #datasets
-datasets = get_datasets("data/asl_alphabet", [2000,500,500], cnn_transforms)
+datasets = get_datasets("data/asl_alphabet", [2000,500], cnn_transforms)
 train_dataset, test_dataset = datasets["base"]
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
