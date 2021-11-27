@@ -34,7 +34,11 @@ class ExampleTransform(Transform):
 
 class NormalNoise(Transform):
     def __call__(self, sample: torch.Tensor):
-        noise = np.random.normal(loc = 0.1, scale = 0.1, size = (3,200,200))
-        weight = 50
+        weight = 10
+        noise = torch.randn(size = (3,200,200))
         return (sample + weight*noise)/255
-        return torch.add(sample,noise,alpha = 0)
+
+class Rotate(Transform):
+    def __call__(self, sample: torch.Tensor):
+        theta = 1
+        pass

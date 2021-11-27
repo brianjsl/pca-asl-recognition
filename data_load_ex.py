@@ -17,7 +17,7 @@ if __name__ == "__main__":
     # train_inverted_dataset, test_inverted_dataset = datasets["example"]
     print(train_dataset[1][0])
     print(noise_dataset[1][0])
-    """
+    
     x=train_dataset[0][1][0]
     y = torch.permute(x,[1,2,0])
     plt.imshow(y)
@@ -27,5 +27,5 @@ if __name__ == "__main__":
     y = torch.permute(x,[1,2,0])
     plt.imshow(y)
     plt.show()
-    """
+    
     # print(train_inverted_dataset[1][0])
