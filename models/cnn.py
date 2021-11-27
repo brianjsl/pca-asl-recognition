@@ -13,7 +13,7 @@ for dirname, _, filenames in os.walk('../data'):
 import sys
 sys.path.append("../")
 from data_loader.data_loader import get_datasets
-from data_loader.transforms import ExampleTransform
+from data_loader.transforms import Inversion, NormalNoise, Rotate
 
 #hyperparameters
 test_size = 0.2
@@ -23,14 +23,19 @@ learning_rate = 0.001
 num_classes = 29
 
 cnn_transforms = {
-    "base": None
-    }
+    "base": None,
+    "inversion": Inversion(), 
+    "normal": NormalNoise(),
+    "rotate": Rotate()
+}
 
 #datasets
-datasets = get_datasets("data/asl_alphabet", [2000,500], cnn_transforms)
+datasets = get_datasets(os.getcwd()+"/../data", [2000,500], cnn_transforms)
 train_dataset, test_dataset = datasets["base"]
 
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 
 # class Net(torch.nn.Module):
 #     def __init__(self):

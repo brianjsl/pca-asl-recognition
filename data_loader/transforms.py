@@ -27,12 +27,18 @@ class Transform(abc.ABC):
         pass
 
 
-class ExampleTransform(Transform):
+class Inversion(Transform):
+    """
+    Color Inversion
+    """
     # invert image
     def __call__(self, sample: torch.Tensor):
         return 255 - sample
 
 class NormalNoise(Transform):
+    """
+    
+    """
     def __call__(self, sample: torch.Tensor):
         weight = 10
         noise = torch.randn(size = (3,200,200))
