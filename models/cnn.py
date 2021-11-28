@@ -41,6 +41,7 @@ cnn_transforms = {
 datasets = get_datasets(os.getcwd()+"/../data", [2000,500], cnn_transforms)
 train_dataset, test_dataset = datasets["base"]
 
+
 #loader to faciliate processign
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
 
@@ -79,7 +80,7 @@ class ConvNet(nn.Module):
         )
 
         self.fc1 = nn.Sequential(
-            nn.Linear(256*25*25,1024),
+            nn.Linear(21307392,1024),
             nn.ReLU()
         ) 
         self.fc2 = nn.Sequential(
@@ -90,7 +91,7 @@ class ConvNet(nn.Module):
     def forward(self, x):
         x = self.conv1(x)
         x = self.conv2(x)
-        x = x.view(-1, 256*25*25)
+        x = x.view(-1, 21307392)
         x = self.fc1(x)
         x = self.fc2(x)
         return x
@@ -103,6 +104,7 @@ optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 n_total_steps = len(train_loader)
 for epoch in range(num_epochs):
     for i, (images, labels) in enumerate(train_loader):
+        images = images.float()
         images = images.to(device)
         labels = labels.to(device)
 
