@@ -42,11 +42,9 @@ datasets = get_datasets(os.getcwd()+"/../data", [2000,500], cnn_transforms)
 train_dataset, test_dataset = datasets["base"]
 
 #loader to faciliate processign
-train_loader = torch.utils.data.DataLoader(dataset = train_dataset, 
-    batch_size = batch_size, shuffle = True)
+train_loader = torch.utils.data.DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
 
-test_loader = torch.utils.data.DataLoader(dataset = test_dataset,
-    batch_size = batch_size, shuffle = True)
+test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = batch_size, shuffle = True)
 
 #classes
 classes = DATA_LABELS
@@ -58,39 +56,46 @@ def imgshow(img: Tensor):
     plt.show()
 
 class ConvNet(nn.Module):
+
     def __init__(self):
         super().__init__()
-        self.conv1 = nn.Conv2d(3,64,3)
-        self.conv2 = nn.Conv2d(64,128,3)
-        self.conv3 = nn.Conv2d(128,256,3)
+        self.conv1 = nn.Sequential(
+            nn.Conv2d(3,64,3, stride = 1, padding = 2), 
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+        self.conv2 = nn.Sequential(
+            nn.Conv2d(64,128,3, stride = 1, padding = 2), 
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride = 2)
+        )
 
-        x = torch.rand(50,50).view(-1,1,50,50)
-        self._to_linear = None
-        self.convs(x)
+        self.conv3 = nn.Sequential( 
+            nn.Conv2d(128,256,3),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.BatchNorm2d(256),
+            nn.Dropout2d(0.5),
+        )
 
-        self.fc1 = nn.Linear(self._to_linear,1024)
-        self.fc2 = nn.Linear(1024, 29)
-
-    def convs(self, x):
-        x = F.max_pool2d(F.relu(self.conv1(x)),2,2)
-        x = F.max_pool2d(F.relu(self.conv2(x)),2,2)
-        x = F.max_pool2d(F.relu(self.conv3(x)),2,2)
-
-        if self._to_linear is None:
-            self._to_linear = x[0].shape[0]*x[0].shape[1]*x[0].shape[2]
-        return x
+        self.fc1 = nn.Sequential(
+            nn.Linear(256*25*25,1024),
+            nn.ReLU()
+        ) 
+        self.fc2 = nn.Sequential(
+            nn.Linear(1024, 29),
+            nn.Softmax()
+        )
 
     def forward(self, x):
-        x = F.relu(self.conv1(x))
-        x = F.max_pool2d(x, 2, 2)
-        x = F.relu(self.conv2(x))
-        x = F.max_pool2d(x, 2, 2)
-        x = F.relu(self.conv3(x))
-        x = F.max_pool2d(x, 2, 2)
-        x = torch.flatten(x, 1)
+        x = self.conv1(x)
+        x = self.conv2(x)
+        x = x.view(-1, 256*25*25)
+        x = self.fc1(x)
+        x = self.fc2(x)
         return x
 
-model = ConvNet.to(device)
+model = ConvNet().to(device)
 
 criterion = torch.nn.CrossEntropyLoss
 optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
@@ -98,8 +103,6 @@ optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 n_total_steps = len(train_loader)
 for epoch in range(num_epochs):
     for i, (images, labels) in enumerate(train_loader):
-        # origin shape: [4, 3, 32, 32] = 4, 3, 1024
-        # input_layer: 3 input channels, 6 output channels, 5 kernel size
         images = images.to(device)
         labels = labels.to(device)
 
@@ -116,8 +119,6 @@ for epoch in range(num_epochs):
             print (f'Epoch [{epoch+1}/{num_epochs}], Step [{i+1}/{n_total_steps}], Loss: {loss.item():.4f}')
 
 print('Finished Training')
-# PATH = './cnn.pth'
-# torch.save(model.state_dict(), PATH)
 
 with torch.no_grad():
     n_correct = 0
