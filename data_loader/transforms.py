@@ -10,8 +10,11 @@ TODO: consider that the types of images are torch tensors, so any operations
 import abc
 
 import torch
+import torch.nn.functional as F
 import numpy as np
-
+import matplotlib.pyplot as plt
+import random
+import scipy.ndimage
 
 class Transform(abc.ABC):
     """
@@ -48,5 +51,6 @@ class Rotate(Transform):
     Rotates the Image
     """
     def __call__(self, sample: torch.Tensor):
-        theta = 1
-        pass
+        theta = random.randint(-10,10)
+        copy = torch.clone(sample)
+        return torch.from_numpy(scipy.ndimage.rotate(copy, theta, axes=(1,2), reshape=False))
