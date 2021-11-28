@@ -28,20 +28,20 @@ if __name__ == "__main__":
     plt.imshow(y)
     plt.show()
     
-    x= train_dataset[1][0]
-    y = torch.permute(x,[1,2,0])
-    plt.imshow(y)
-    plt.show()
+    # x= train_dataset[1][0]
+    # y = torch.permute(x,[1,2,0])
+    # plt.imshow(y)
+    # plt.show()
 
-    x=train_dataset_noise[1][0]
-    y = torch.permute(x,[1,2,0])
-    plt.imshow(y)
-    plt.show()
+    # x=train_dataset_noise[1][0]
+    # y = torch.permute(x,[1,2,0])
+    # plt.imshow(y)
+    # plt.show()
 
-    x = train_inverted_dataset[1][0]
-    y = torch.permute(x,[1,2,0])
-    plt.imshow(y)
-    plt.show()
+    # x = train_inverted_dataset[1][0]
+    # y = torch.permute(x,[1,2,0])
+    # plt.imshow(y)
+    # plt.show()
 
     # x = train_inverted_dataset[1][0]
     # y = torch.permute(x,[1,2,0])

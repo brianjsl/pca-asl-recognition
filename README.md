@@ -5,8 +5,11 @@ By Brian Lee, Lilian Luong, and Srinath Mahankali
 A comparison of the following models to predict static ASL sign language symbols:
 
 *Convolutional Neural Networks (CNNs)
+
 *The PCA Algorithm(Eigenface Algorithm) with Kernel SVM and MLPs
+
 *Stable PCP with Kernel SVMs and MLPs
+
 *DenseNet
 
 ## Additional Information
