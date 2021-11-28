@@ -29,15 +29,14 @@ class Transform(abc.ABC):
 
 class Inversion(Transform):
     """
-    Color Inversion
+    Inverts the colors of the Image
     """
-    # invert image
     def __call__(self, sample: torch.Tensor):
         return 255 - sample
 
 class NormalNoise(Transform):
     """
-    
+    Adds Normal Noise to Image
     """
     def __call__(self, sample: torch.Tensor):
         weight = 10
@@ -45,6 +44,9 @@ class NormalNoise(Transform):
         return (sample + weight*noise)/255
 
 class Rotate(Transform):
+    """
+    Rotates the Image
+    """
     def __call__(self, sample: torch.Tensor):
         theta = 1
         pass
