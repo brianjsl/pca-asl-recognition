@@ -54,3 +54,16 @@ class Rotate(Transform):
         theta = random.randint(-10,10)
         copy = torch.clone(sample)
         return torch.from_numpy(scipy.ndimage.rotate(copy, theta, axes=(1,2), reshape=False))
+
+class Blur(Transform):
+    """
+    Blurs the Image
+    """
+    def __call__(self, sample: torch.Tensor):
+        blur_kernel = torch.zeros([1,4,4]) + 1/16
+        #for i in range(3):
+        #    for j in range(3):
+        #        for k in range(3):
+        #            blur_kernel[i][j][k] = 1/27
+        copy = torch.clone(sample)
+        return torch.from_numpy(scipy.ndimage.convolve(copy, blur_kernel))
