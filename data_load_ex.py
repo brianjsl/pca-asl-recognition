@@ -20,13 +20,18 @@ if __name__ == "__main__":
     train_dataset_noise, test_dataset_noise = datasets["normal"]
     train_inverted_dataset, test_inverted_dataset = datasets["inversion"]
     train_rotate_dataset, test_rotate_dataset = datasets["rotated"]
-    print(train_dataset[1][0])
-    print(train_dataset_noise[1][0])
+    # print(test_dataset[1][0])
+    # print(train_dataset_noise[1][0])
     
-    x = train_rotate_dataset[1][0]
-    y = torch.permute(x,[1,2,0])
-    plt.imshow(y)
-    plt.show()
+    # x = test_dataset[1][0]
+    # y = torch.permute(x, [1,2,0])
+    # plt.imshow(y)
+    # plt.show()
+
+    # x = train_rotate_dataset[1][0]
+    # y = torch.permute(x,[1,2,0])
+    # plt.imshow(y)
+    # plt.show()
     
     # x= train_dataset[1][0]
     # y = torch.permute(x,[1,2,0])
