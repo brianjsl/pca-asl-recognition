@@ -7,8 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision
 from torchvision import transforms, datasets
-import matplotlib.pyplot as plt
-
+import matplotlib.pyplot as plt 
 import os
 import sys
 
@@ -103,25 +102,25 @@ criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
 n_total_steps = len(train_loader)
-for epoch in range(num_epochs):
-    for i, (images, labels) in enumerate(train_loader):
-        images = images.float()
-        images = images.to(device)
-        labels = labels.to(device)
+# for epoch in range(num_epochs):
+#     for i, (images, labels) in enumerate(train_loader):
+#         images = images.float()
+#         images = images.to(device)
+#         labels = labels.to(device)
 
-        # Forward pass
-        outputs = model(images)
-        loss = criterion(outputs, labels)
+#         # Forward pass
+#         outputs = model(images)
+#         loss = criterion(outputs, labels)
 
-        # Backward and optimize
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+#         # Backward and optimize
+#         optimizer.zero_grad()
+#         loss.backward()
+#         optimizer.step()
 
-        if (i + 1) % 1 == 0:
-            print(f'Epoch [{epoch + 1}/{num_epochs}], Step [{i + 1}/{n_total_steps}], Loss: {loss.item():.4f}')
+#         if (i + 1) % 1 == 0:
+#             print(f'Epoch [{epoch + 1}/{num_epochs}], Step [{i + 1}/{n_total_steps}], Loss: {loss.item():.4f}')
 
-print('Finished Training')
+# print('Finished Training')
 
 with torch.no_grad():
     n_correct = 0
@@ -129,6 +128,7 @@ with torch.no_grad():
     n_class_correct = [0 for i in range(10)]
     n_class_samples = [0 for i in range(10)]
     for images, labels in test_loader:
+        images = images.float()
         images = images.to(device)
         labels = labels.to(device)
         outputs = model(images)
