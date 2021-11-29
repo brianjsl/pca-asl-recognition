@@ -7,11 +7,12 @@ import os
 from typing import Dict, List, Union
 
 import numpy as np
+from matplotlib import image
 
 # PyTorch imports
-from torch.utils.data import Dataset, DataLoader, random_split
+from torch import from_numpy
+from torch.utils.data import Dataset
 from torch.utils.data.dataset import T_co
-from torchvision.io import read_image
 from data_loader.transforms import Transform
 
 import sys
@@ -47,7 +48,7 @@ class ASLDataset(Dataset):
         folder_index = self._folder_indices[index_index]
         file_name = label_name + str(folder_index) + ".jpg"
         img_path = os.path.join(self._img_dir, label_name, file_name)
-        img = read_image(img_path)
+        img = from_numpy(np.copy(np.moveaxis(image.imread(img_path), -1, 0)))
 
         # Apply transforms if they exist
         transforms = self._transforms
@@ -73,7 +74,7 @@ def get_datasets(directory: str,
     """
     assert sum(set_sizes) <= constants.NUM_IMAGES_PER_LABEL, "Can't split up dataset in way that doesn't overlap"
 
-    random_indices = np.arange(constants.NUM_IMAGES_PER_LABEL)
+    random_indices = np.arange(constants.NUM_IMAGES_PER_LABEL) + 1
     np.random.shuffle(random_indices)
     split_indices = np.split(random_indices, indices_or_sections=np.cumsum(set_sizes))[:-1]
 
