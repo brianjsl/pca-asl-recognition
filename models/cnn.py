@@ -36,7 +36,7 @@ cnn_transforms = {
 }
 
 # datasets
-all_datasets = get_datasets(os.getcwd() + "/../data", [2000, 500], cnn_transforms)
+all_datasets = get_datasets(os.getcwd() + "/../data", [2800, 200], cnn_transforms)
 train_dataset, test_dataset = all_datasets["base"]
 
 # loader to faciliate processing
@@ -117,19 +117,31 @@ n_total_steps = len(train_loader)
 #         loss.backward()
 #         optimizer.step()
 
+<<<<<<< HEAD
 #         if (i + 1) % 1 == 0:
 #             print(f'Epoch [{epoch + 1}/{num_epochs}], Step [{i + 1}/{n_total_steps}], Loss: {loss.item():.4f}')
 
 # print('Finished Training')
+=======
+        if (i + 1) % 10 == 0:
+            print(f'Epoch [{epoch + 1}/{num_epochs}], Step [{i + 1}/{n_total_steps}], Loss: {loss.item():.4f}')
+
+print('Finished Training')
+torch.save(model, 'saved_models/trained_model.pt')
+>>>>>>> 5f49d4fcb981a2c1ff6b4ec8aa700bfcda27bdd3
 
 with torch.no_grad():
     n_correct = 0
     n_samples = 0
-    n_class_correct = [0 for i in range(10)]
-    n_class_samples = [0 for i in range(10)]
+    n_class_correct = [0 for _ in range(num_classes)]
+    n_class_samples = [0 for _ in range(num_classes)]
     for images, labels in test_loader:
+<<<<<<< HEAD
         images = images.float()
         images = images.to(device)
+=======
+        images = images.float().to(device)
+>>>>>>> 5f49d4fcb981a2c1ff6b4ec8aa700bfcda27bdd3
         labels = labels.to(device)
         outputs = model(images)
         # max returns (value ,index)
@@ -137,7 +149,7 @@ with torch.no_grad():
         n_samples += labels.size(0)
         n_correct += (predicted == labels).sum().item()
 
-        for i in range(batch_size):
+        for i in range(len(images)):
             label = labels[i]
             pred = predicted[i]
             if (label == pred):
