@@ -101,7 +101,7 @@ model = ConvNet().to(device)
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
-n_total_steps = len(train_loader)
+# n_total_steps = len(train_loader)
 # for epoch in range(num_epochs):
 #     for i, (images, labels) in enumerate(train_loader):
 #         images = images.float()
@@ -117,18 +117,10 @@ n_total_steps = len(train_loader)
 #         loss.backward()
 #         optimizer.step()
 
-<<<<<<< HEAD
 #         if (i + 1) % 1 == 0:
 #             print(f'Epoch [{epoch + 1}/{num_epochs}], Step [{i + 1}/{n_total_steps}], Loss: {loss.item():.4f}')
 
 # print('Finished Training')
-=======
-        if (i + 1) % 10 == 0:
-            print(f'Epoch [{epoch + 1}/{num_epochs}], Step [{i + 1}/{n_total_steps}], Loss: {loss.item():.4f}')
-
-print('Finished Training')
-torch.save(model, 'saved_models/trained_model.pt')
->>>>>>> 5f49d4fcb981a2c1ff6b4ec8aa700bfcda27bdd3
 
 with torch.no_grad():
     n_correct = 0
@@ -136,12 +128,8 @@ with torch.no_grad():
     n_class_correct = [0 for _ in range(num_classes)]
     n_class_samples = [0 for _ in range(num_classes)]
     for images, labels in test_loader:
-<<<<<<< HEAD
         images = images.float()
         images = images.to(device)
-=======
-        images = images.float().to(device)
->>>>>>> 5f49d4fcb981a2c1ff6b4ec8aa700bfcda27bdd3
         labels = labels.to(device)
         outputs = model(images)
         # max returns (value ,index)
@@ -159,6 +147,6 @@ with torch.no_grad():
     acc = 100.0 * n_correct / n_samples
     print(f'Accuracy of the network: {acc} %')
 
-    for i in range(10):
+    for i in range(num_classes):
         acc = 100.0 * n_class_correct[i] / n_class_samples[i]
         print(f'Accuracy of {classes[i]}: {acc} %')
