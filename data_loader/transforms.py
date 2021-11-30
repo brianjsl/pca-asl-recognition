@@ -119,4 +119,3 @@ def fgsm(self, model, X, y, epsilon =0.1):
 #     def __call__(self, sample: torch.Tensor, model):
 #         copy = torch.clone(sample)
 #         delta = fgsm(model, copy.im, )
-
