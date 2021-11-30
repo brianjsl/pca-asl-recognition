@@ -102,7 +102,7 @@ class ConvNet(nn.Module):
         return x
 
 load_model = True
-model = torch.load("saved_models/cnn_model.pt") if load_model else ConvNet().to(device)
+model = torch.load(os.getcwd()+"/saved_models/cnn_model.pt") if load_model else ConvNet().to(device)
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
