@@ -27,7 +27,7 @@ def add_resize_to_config(config: Dict[str, Union[None, Transform, List]],
     :return: new config with added Resize transforms
     """
     updated_config = {}
-    for transform_name, setting in config:
+    for transform_name, setting in config.items():
         if setting is None:
             updated_config[transform_name] = transforms.Resize(resize)
         elif isinstance(setting, list):
