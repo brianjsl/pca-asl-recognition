@@ -6,6 +6,7 @@ from sklearn.svm import SVC
 from torchvision import transforms
 from matplotlib import pyplot as plt
 
+import time
 import sys
 sys.path.append("../")
 from data_loader.data_loader import get_datasets
@@ -13,16 +14,18 @@ from data_loader.transforms import Inversion, NormalNoise, Rotate
 from constants import DATA_LABELS
 
 # gpu support
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+# device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 
 #pca transforms
 pca_transforms = {
-    "base": transforms.Resize((32, 32)),
-    # "inversion": [Inversion(), transforms.Resize((32, 32))],
-    "normal noise": [NormalNoise(), transforms.Resize((32, 32))],
-    "rotate": [Rotate(), transforms.Resize((32, 32))],
+    "base": None,
+    "inversion": Inversion(),
+    "normal noise": NormalNoise(),
+    "rotate": Rotate(),
 }
 transform_names = sorted(pca_transforms.keys())
+
 
 #plots the images
 def plot_images(images, titles, h, w, n_row=3, n_col=4):
@@ -34,12 +37,13 @@ def plot_images(images, titles, h, w, n_row=3, n_col=4):
         plt.title(titles[i], size=12)
         plt.xticks(())
         plt.yticks(())
+    plt.show()
 
 
 # datasets
 all_datasets = get_datasets(os.getcwd() + "/../data", [2800, 200], pca_transforms)
 train_dataset, test_dataset = all_datasets["base"]
-augmented_datasets = [all_datasets[augmentation][1] for augmentation in transform_names[1:]]
+# augmented_datasets = [all_datasets[augmentation][1] for augmentation in transform_names[1:]]
 
 #principal component analysis
 pca = PCA(n_components = 100)

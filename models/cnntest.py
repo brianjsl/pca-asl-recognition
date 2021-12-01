@@ -63,7 +63,7 @@ images, labels = dataiter.next()
 
 conv1 = nn.Conv2d(3,64,3)
 conv2 = nn.Conv2d(64,128,3)
-conv3 = nn.Conv2d(128,256,3
+conv3 = nn.Conv2d(128,256,3)
 
 x = F.relu(conv1(images))
 print(x.shape)

@@ -88,8 +88,9 @@ class ConvNet(nn.Module):
             nn.Sigmoid()  # TODO: double check, sigmoid is used by the example but we had ReLU before
         )
         self.fc2 = nn.Sequential(
-            nn.Linear(1024, 29),
-            nn.Softmax(dim=1)
+            nn.Linear(1024, 29)
+            # TODO: double check, removed softmax here because a softmax operation is already performed by
+            #   the loss function
         )
 
     def forward(self, x):
@@ -101,7 +102,7 @@ class ConvNet(nn.Module):
         x = self.fc2(x)
         return x
 
-load_model = True
+load_model = False
 model = torch.load(os.getcwd()+"/saved_models/cnn_model.pt") if load_model else ConvNet().to(device)
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
