@@ -4,6 +4,7 @@ import sys
 
 sys.path.append("../")
 
+import joblib
 from torch.utils.data import DataLoader
 
 from data_loader.data_loader import get_datasets
@@ -49,7 +50,9 @@ reduced_test_matrix = pca_model.transform(test_image_matrix)
 
 # SVM
 print("Fitting SVM...")
-svm_model = fit_svm(reduced_train_matrix, train_label_matrix, gamma=0.5, C=0.09, verbose=1)
+# svm_model = joblib.load("models/saved_models/svm_test.rbf")
+svm_model = fit_svm(reduced_train_matrix, train_label_matrix, gamma=0.5, C=0.09, verbose=2)
+joblib.dump(svm_model, "models/saved_models/svm_test.rbf")
 print("Test acc:", svm_model.score(reduced_test_matrix, test_label_matrix))
 
 # TODO: i haven't tested fit_mlp or mlp_accuracy at all but they should work in place of lines 41, 42
