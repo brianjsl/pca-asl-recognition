@@ -39,22 +39,26 @@ def add_resize_to_config(config: Dict[str, Union[None, Transform, List]],
 
 def dataset_to_matrices(dataset: ASLDataset,
                         flatten: bool = False,
-                        shuffle: bool = True) -> Tuple[np.ndarray, np.ndarray]:
+                        shuffle: bool = True,
+                        batch_size: Union[None, float] = None) -> Tuple[DataLoader, np.ndarray, np.ndarray]:
     """
     Converts an ASLDataset into two NumPy matrices of images and labels, flattening images if desired.
 
     :param dataset: an ASLDataset to process
     :param flatten: True if the image matrix should be flattened per image, else False (default False)
     :param shuffle: True if the image order should be randomized, else False (default True)
-    :return: (images, labels)
+    :param batch_size: if None, return loader with batch_size=dataset_size, else return loader with given batch size
+    :return: (loader, images, labels)
+        loader: DataLoader generated from dataset
         images: NumPy array with shape (len(dataset), <image_size>), where image size can be 1 or N dimensions
         labels: NumPy array with shape (len(dataset),) of integer image labels
     """
     dataset_size = len(dataset)
-    temp_loader = DataLoader(dataset, batch_size=dataset_size, shuffle=shuffle)
-    data = next(iter(temp_loader))
-    input_matrix = data[0].numpy()
-    label_matrix = data[1].numpy()
+    loader = DataLoader(dataset, batch_size=(dataset_size if batch_size is None else batch_size), shuffle=shuffle)
+
+    batched_images, batched_labels = list(zip(*[(images.numpy(), labels.numpy()) for images, labels in loader]))
+    input_matrix = np.concatenate(batched_images, axis=0)
+    label_matrix = np.concatenate(batched_labels, axis=0)
 
     assert input_matrix.shape[0] == dataset_size
     assert label_matrix.shape == (dataset_size,)
@@ -63,7 +67,7 @@ def dataset_to_matrices(dataset: ASLDataset,
     if flatten:
         input_matrix = input_matrix.reshape(dataset_size, -1)
 
-    return input_matrix, label_matrix
+    return loader, input_matrix, label_matrix
 
 
 def normalize_matrix(mat: np.ndarray, separate_param: bool = True) -> Tuple[np.ndarray,

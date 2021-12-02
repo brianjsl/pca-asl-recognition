@@ -137,14 +137,15 @@ def fit_svm(train: np.ndarray,
 
     if verbose:
         print(f"Fit SVM model. Took {time.time() - t0:.2f} seconds.")
-        print(f"Training accuracy: {svm.score(train, labels): .4f}")
+        t0 = time.time()
+        print(f"Training accuracy: {svm.score(train, labels): .4f} (t: {time.time() - t0:.2f} s)")
 
     return svm
 
 
 def fit_mlp(train: np.ndarray,
             labels: np.ndarray,
-            layers: Tuple[int],
+            layers: Tuple[int, ...],
             num_epochs: int = 5,
             batch_size: int = 64,
             lr: float = 0.001,
@@ -264,8 +265,9 @@ def fit_cnn(train_loader: DataLoader,
 
     if verbose:
         print(f"Finished training CNN. Took {time.time() - t0:.2f} seconds.")
+        t0 = time.time()
         # Measure accuracy on testing set
-        print(f"Final training accuracy: {cnn_accuracy(model, train_loader):.4f}")
+        print(f"Final training accuracy: {cnn_accuracy(model, train_loader):.4f} (t: {time.time() - t0:.2f} s)")
 
     return model
 

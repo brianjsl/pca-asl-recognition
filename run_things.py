@@ -6,6 +6,8 @@ import time
 sys.path.append("../")
 
 import joblib
+import matplotlib.pyplot as plt
+import numpy as np
 import pickle as pkl
 from torch.utils.data import DataLoader
 
@@ -32,7 +34,7 @@ data_config = {
 }
 resized_data_config = add_resize_to_config(data_config, (32, 32))  # add resize to 32x32
 
-load_data_from_pickle = False
+load_data_from_pickle = True
 if load_data_from_pickle:
     with open("models/saved_models/data_matrices.pkl", "rb") as f:
         train_image_matrix, train_label_matrix, test_image_matrix, test_label_matrix = pkl.load(f)
@@ -58,7 +60,7 @@ pca_model = fit_pca(train_image_matrix, num_components=100, verbose=1)
 reduced_train_matrix = pca_model.transform(train_image_matrix)
 reduced_test_matrix = pca_model.transform(test_image_matrix)
 
-for C in (0.1, 0.2, 0.3):
+for C in (6, 10, 15, 30):
     gamma = 'scale'
     # SVM
     print("Fitting SVM...")
