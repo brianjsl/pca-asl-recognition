@@ -12,7 +12,7 @@ from models.models import device, fit_cnn, cnn_accuracy
 
 
 MODEL_SAVE_PATH = "models/saved_models/cnn.pt"
-LOAD_SAVED_MODEL = False
+LOAD_SAVED_MODEL = True
 
 
 # Load data
@@ -30,6 +30,7 @@ if LOAD_SAVED_MODEL:
 else:
     print("Training CNN.")
     model = fit_cnn(train_dataloader, verbose=True)
+    torch.save(model, MODEL_SAVE_PATH)
 
 
 # Load test data

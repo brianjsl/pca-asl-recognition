@@ -37,6 +37,7 @@ if PCA_LOAD_SAVED_MODEL:
 else:
     print("Fitting PCA model.")
     pca_model = fit_pca(train_image_matrix, num_components=NUM_PCA_COMPONENTS, verbose=1)
+    joblib.dump(pca_model, PCA_MODEL_SAVE_PATH)
 
 print("Transforming training data using PCA model.")
 t0 = time.time()
@@ -60,6 +61,7 @@ else:
                         batch_size=64,
                         lr=0.001,
                         verbose=True)
+    torch.save(mlp_model, PCA_MODEL_SAVE_PATH)
 
 
 # Load test data

@@ -34,6 +34,7 @@ if PCA_LOAD_SAVED_MODEL:
 else:
     print("Fitting PCA model.")
     pca_model = fit_pca(train_image_matrix, num_components=NUM_PCA_COMPONENTS, verbose=1)
+    joblib.dump(pca_model, PCA_MODEL_SAVE_PATH)
 
 print("Transforming training data using PCA model.")
 t0 = time.time()
@@ -51,6 +52,7 @@ if SVM_LOAD_SAVED_MODEL:
 else:
     print("Training SVM model.")
     svm_model = fit_svm(reduced_image_matrix, train_label_matrix, gamma='scale', C=15.0, verbose=1)
+    joblib.dump(svm_model, PCA_MODEL_SAVE_PATH)
 
 
 # Load test data
