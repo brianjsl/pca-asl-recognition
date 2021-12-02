@@ -52,7 +52,7 @@ if SVM_LOAD_SAVED_MODEL:
 else:
     print("Training SVM model.")
     svm_model = fit_svm(reduced_image_matrix, train_label_matrix, gamma='scale', C=15.0, verbose=1)
-    joblib.dump(svm_model, PCA_MODEL_SAVE_PATH)
+    joblib.dump(svm_model, SVM_MODEL_SAVE_PATH)
 
 
 # Load test data
