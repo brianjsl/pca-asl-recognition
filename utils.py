@@ -65,7 +65,7 @@ def dataset_to_matrices(dataset: ASLDataset,
 
     # Flatten if necessary
     if flatten:
-        input_matrix = input_matrix.reshape(dataset_size, -1)
+        input_matrix = reshape_matrix_flat(input_matrix)
 
     return loader, input_matrix, label_matrix
 
@@ -86,3 +86,28 @@ def normalize_matrix(mat: np.ndarray, separate_param: bool = True) -> Tuple[np.n
     stdev = mat.std(axis=axis)
 
     return (mat - mean) / stdev, mean, stdev
+
+
+def reshape_matrix_image(X: np.ndarray) -> np.ndarray:
+    """
+    Reshape a matrix to (num_samples, 3, size, size) [num_pixels = size * size for square (required) image]
+    """
+    assert len(X.shape) >= 2, "need a num_samples dimension and at least one more"
+    size = round(np.sqrt(np.prod(X.shape[1:]) / 3))
+    return X.reshape((X.shape[0], 3, size, size))
+
+
+def reshape_matrix_channels(X: np.ndarray) -> np.ndarray:
+    """
+    Reshape a matrix to (num_samples, 3, num_pixels)
+    """
+    assert len(X.shape) >= 2, "need a num_samples dimension and at least one more"
+    return X.reshape((X.shape[0], 3, -1))
+
+
+def reshape_matrix_flat(X: np.ndarray) -> np.ndarray:
+    """
+    Reshape a matrix to (num_samples, 3 * num_pixels)
+    """
+    assert len(X.shape) >= 2, "need a num_samples dimension and at least one more"
+    return X.reshape((X.shape[0], -1))
