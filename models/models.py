@@ -90,6 +90,21 @@ class MLP(nn.Module):
     def forward(self, x):
         return self.model(x)
 
+
+class RPCA:
+    def __init__(self):
+        self.components_ = None
+
+    def fit(self, X: np.ndarray):
+        assert self.components_ is None
+
+    def transform(self, X: np.ndarray) -> np.ndarray:
+        """
+        Project X onto a
+        :param X: input matrix (num_samples,
+        :return:
+        """
+
 """
 Training functions
 """
@@ -110,6 +125,10 @@ def fit_pca(image_matrix: np.ndarray, num_components: int, verbose: int = 1) -> 
     if verbose:
         print(f"Fit PCA model. took {time.time() - t0:.2f} seconds.")
     return cast(PCA, pca)
+
+
+def fit_robust_pca():
+    pass
 
 
 def fit_svm(train: np.ndarray,

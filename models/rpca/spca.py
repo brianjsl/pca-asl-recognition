@@ -5,10 +5,13 @@ Created on Fri Feb 03 14:25:59 2017
 @author: wexiao
 """
 
+import time
+
 import numpy as np
 from models.rpca.utility import thres
 
-def spca(M, lam=np.nan, mu=np.nan, tol=10**(-7), maxit=1000):
+
+def spca(M, lam=np.nan, mu=np.nan, tol=10**(-7), maxit=1000, verbose=True):
     """ Stable Principal Component Pursuit (Zhou et al., 2009)
     
     This code solves the following optimization problem
@@ -30,6 +33,8 @@ def spca(M, lam=np.nan, mu=np.nan, tol=10**(-7), maxit=1000):
     tol : tolerance value for convergency (default 10^-7).
     
     maxit : maximum iteration (default 1000).
+
+    verbose : bool
     
     Returns
     ----------
@@ -56,7 +61,7 @@ def spca(M, lam=np.nan, mu=np.nan, tol=10**(-7), maxit=1000):
         mu = np.sqrt(2*max(m,n))
     if np.isnan(lam):
         lam = 1.0/np.sqrt(max(m,n))
-        
+
     # initialization
     L0 = np.zeros((m,n)) 
     L1 = np.zeros((m,n)) 
@@ -66,8 +71,11 @@ def spca(M, lam=np.nan, mu=np.nan, tol=10**(-7), maxit=1000):
     t1 = 1
     mu_iter = mu
     k = 1
+    time_flag = None
     
     while 1:
+        if verbose:
+            time_flag = time.time()
         Y_L = L1 + (t0-1)/t1*(L1-L0)
         Y_S = S1 + (t0-1)/t1*(S1-S0)
         G_L = Y_L - 0.5*(Y_L + Y_S - M)
@@ -85,6 +93,8 @@ def spca(M, lam=np.nan, mu=np.nan, tol=10**(-7), maxit=1000):
         E_L =2*(Y_L - L1) + (L1 + S1 - Y_L - Y_S)
         E_S =2*(Y_S - S1) + (L1 + S1 - Y_L - Y_S) 
         dist = np.sqrt(np.linalg.norm(E_L, ord='fro')**2 + np.linalg.norm(E_S, ord='fro')**2)
+        if verbose and k % 1 == 0:
+            print(f"iter {k}: took {time.time() - time_flag:.2f} seconds, dist = {dist}", flush=True)
         if k >= maxit or dist < tol:
             break
         else:
