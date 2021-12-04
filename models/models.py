@@ -113,7 +113,7 @@ class ChannelPCA:
         assert len(X.shape) == 3, "array should have 3 dimensions (num_images, 3, num_pixels)"
         assert X.shape[1] == 3, "second dimension of array should be 3 (RGB)"
         transformed_channels = [self._pca_models[i].transform(X[:, i, :]) for i in range(3)]
-        assert transformed_channels[0].shape == (X.shape[0], 3 * self._num_components)
+        assert transformed_channels[0].shape == (X.shape[0], self._num_components)
         return np.concatenate(transformed_channels, axis=1)
 
     def get_eigenfingers(self) -> np.ndarray:
