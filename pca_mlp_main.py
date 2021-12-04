@@ -11,12 +11,18 @@ import torch
 
 import constants
 from load_data_common import load_train_matrices, load_test_matrices
-from models.models import device, fit_channel_pca, fit_mlp, mlp_accuracy
+from models.models import device, fit_channel_pca, fit_channel_rpca, fit_mlp, mlp_accuracy
 from utils import reshape_matrix_flat, reshape_matrix_channels
 
 
-PCA_MODEL_SAVE_PATH = "models/saved_models/pca.pt"
-MLP_MODEL_SAVE_PATH = "models/saved_models/mlp.pt"
+USE_RPCA = True  # set false for PCA
+method_str = "rpca" if USE_RPCA else "pca"
+pca_method = fit_channel_rpca if USE_RPCA else fit_channel_pca
+print(f"Running experiments for {method_str.upper()} with SVM")
+
+
+PCA_MODEL_SAVE_PATH = f"models/saved_models/{method_str}.pt"
+MLP_MODEL_SAVE_PATH = f"models/saved_models/{method_str}_mlp.pt"
 PCA_LOAD_SAVED_MODEL = True  # will use same PCA model as in pca_svm_main.py
 MLP_LOAD_SAVED_MODEL = False
 
@@ -34,11 +40,11 @@ print(f"Loaded data in {time.time() - t0:.2f} seconds.")
 
 # Fit PCA if desired
 if PCA_LOAD_SAVED_MODEL:
-    print("Loading saved PCA.")
+    print(f"Loading saved {method_str.upper()}.")
     pca_model = joblib.load(PCA_MODEL_SAVE_PATH)
 else:
-    print("Fitting PCA model.")
-    pca_model = fit_channel_pca(train_image_matrix, num_components=NUM_PCA_COMPONENTS, verbose=1)
+    print(f"Fitting {method_str.upper()} model.")
+    pca_model = pca_method(train_image_matrix, num_components=NUM_PCA_COMPONENTS, verbose=1)
     joblib.dump(pca_model, PCA_MODEL_SAVE_PATH)
 
 # eigenfingers = pca_model.get_eigenfingers()
@@ -46,9 +52,9 @@ else:
 # print(eigenfingers)
 # raise NotImplementedError
 
-print("Transforming training data using PCA model.")
+print(f"Transforming training data using {method_str.upper()} model.")
 t0 = time.time()
-reduced_image_matrix = reshape_matrix_flat(pca_model.transform(train_image_matrix))
+reduced_image_matrix = pca_model.transform(train_image_matrix)
 print(f"Done, took {time.time() - t0:.2f} seconds.")
 
 # Fit MLP if desired
@@ -61,9 +67,11 @@ if MLP_LOAD_SAVED_MODEL:
     print(f"(Took {time.time() - t0:.2f} seconds)")
 else:
     print("Training MLP model.")
+    num_features = reduced_image_matrix.shape[1]
+    layers = (num_features, 50, constants.NUM_DATA_LABELS)
     mlp_model = fit_mlp(reduced_image_matrix,
                         train_label_matrix,
-                        layers=(NUM_PCA_COMPONENTS, 60, constants.NUM_DATA_LABELS),
+                        layers=layers,
                         num_epochs=5,
                         batch_size=64,
                         lr=0.001,
@@ -84,7 +92,7 @@ dataset_names = sorted(test_matrices.keys())
 for ds_name in dataset_names:
     test_image_matrix, test_label_matrix = test_matrices[ds_name]
     reduced_test_image_matrix = pca_model.transform(reshape_matrix_channels(test_image_matrix))
-    flat_reduced_matrix = reshape_matrix_flat(reduced_test_image_matrix)
-    print(f"{ds_name} accuracy: {mlp_accuracy(mlp_model, reduced_test_image_matrix, test_label_matrix):.4f}")
+    flat_reduced_matrix = reduced_test_image_matrix
+    print(f"{ds_name} accuracy: {mlp_accuracy(mlp_model, flat_reduced_matrix, test_label_matrix):.4f}")
 
 print("Done.")
