@@ -319,7 +319,7 @@ def fit_mlp(train: np.ndarray,
     assert len(layers) >= 2
     assert train.shape[1] == layers[0]
     assert layers[-1] == constants.NUM_DATA_LABELS
-    num_batches = np.ceil(train.shape[0] / batch_size)
+    num_batches = round(np.ceil(train.shape[0] / batch_size))
     t0 = time.time()
 
     criterion = nn.CrossEntropyLoss()
@@ -329,11 +329,11 @@ def fit_mlp(train: np.ndarray,
     for epoch in range(num_epochs):
         for i in range(num_batches):
             images = torch.FloatTensor(train[i * batch_size: (i + 1) * batch_size]).to(device)
-            labels = torch.LongTensor(labels[i * batch_size: (i + 1) * batch_size]).to(device)
+            labs = torch.LongTensor(labels[i * batch_size: (i + 1) * batch_size]).to(device)
 
             # Forward pass
             outputs = model(images)
-            loss = criterion(outputs, labels)
+            loss = criterion(outputs, labs)
 
             # Backward and optimize
             optimizer.zero_grad()
@@ -360,19 +360,19 @@ def mlp_accuracy(model: MLP, test: np.ndarray, labels: np.ndarray, batch_size: i
     :param batch_size: sample batch size
     :return: fraction of samples predicted correctly, float in [0, 1]
     """
-    num_batches = np.ceil(test.shape[0] / batch_size)
+    num_batches = round(np.ceil(test.shape[0] / batch_size))
     num_correct = 0
     num_samples = 0
     with torch.no_grad():
         for i in range(num_batches):
             images = torch.FloatTensor(test[i * batch_size: (i + 1) * batch_size]).to(device)
-            labels = torch.LongTensor(labels[i * batch_size: (i + 1) * batch_size]).to(device)
+            labs = torch.LongTensor(labels[i * batch_size: (i + 1) * batch_size]).to(device)
 
             # Forward pass
             outputs = model(images)
             _, predicted = torch.max(outputs, 1)
-            correct = cast(torch.Tensor, predicted == labels)
-            num_samples += labels.size(0)
+            correct = cast(torch.Tensor, predicted == labs)
+            num_samples += labs.size(0)
             num_correct += correct.sum().item()
 
     return num_correct / num_samples
