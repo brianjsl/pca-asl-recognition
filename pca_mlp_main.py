@@ -11,7 +11,8 @@ import torch
 
 import constants
 from load_data_common import load_train_matrices, load_test_matrices
-from models.models import device, fit_pca, fit_mlp, mlp_accuracy
+from models.models import device, fit_channel_pca, fit_mlp, mlp_accuracy
+from utils import reshape_matrix_flat, reshape_matrix_channels
 
 
 PCA_MODEL_SAVE_PATH = "models/saved_models/pca.pt"
@@ -21,13 +22,14 @@ MLP_LOAD_SAVED_MODEL = False
 
 assert not MLP_LOAD_SAVED_MODEL or PCA_LOAD_SAVED_MODEL, "if MLP is loaded, PCA should also be loaded"
 
-NUM_PCA_COMPONENTS = 100
+NUM_PCA_COMPONENTS = 100 // 3
 
 
 # Load data
 print("Loading training data.")
 t0 = time.time()
 train_image_matrix, train_label_matrix = load_train_matrices()
+train_image_matrix = reshape_matrix_channels(train_image_matrix)
 print(f"Loaded data in {time.time() - t0:.2f} seconds.")
 
 # Fit PCA if desired
@@ -36,12 +38,17 @@ if PCA_LOAD_SAVED_MODEL:
     pca_model = joblib.load(PCA_MODEL_SAVE_PATH)
 else:
     print("Fitting PCA model.")
-    pca_model = fit_pca(train_image_matrix, num_components=NUM_PCA_COMPONENTS, verbose=1)
+    pca_model = fit_channel_pca(train_image_matrix, num_components=NUM_PCA_COMPONENTS, verbose=1)
     joblib.dump(pca_model, PCA_MODEL_SAVE_PATH)
+
+# eigenfingers = pca_model.get_eigenfingers()
+# print(eigenfingers.shape)
+# print(eigenfingers)
+# raise NotImplementedError
 
 print("Transforming training data using PCA model.")
 t0 = time.time()
-reduced_image_matrix = pca_model.transform(train_image_matrix)
+reduced_image_matrix = reshape_matrix_flat(pca_model.transform(train_image_matrix))
 print(f"Done, took {time.time() - t0:.2f} seconds.")
 
 # Fit MLP if desired
@@ -76,7 +83,8 @@ print("Running accuracy tests...")
 dataset_names = sorted(test_matrices.keys())
 for ds_name in dataset_names:
     test_image_matrix, test_label_matrix = test_matrices[ds_name]
-    reduced_test_image_matrix = pca_model.transform(test_image_matrix)
+    reduced_test_image_matrix = pca_model.transform(reshape_matrix_channels(test_image_matrix))
+    flat_reduced_matrix = reshape_matrix_flat(reduced_test_image_matrix)
     print(f"{ds_name} accuracy: {mlp_accuracy(mlp_model, reduced_test_image_matrix, test_label_matrix):.4f}")
 
 print("Done.")

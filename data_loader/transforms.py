@@ -16,6 +16,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 import scipy.ndimage
+from cnn_loader import model as cnn_model
+from torch.autograd import grad
+
 
 class Transform(abc.ABC):
     """
@@ -62,9 +65,25 @@ class Blur(Transform):
     """
     def __call__(self, sample: torch.Tensor):
         blur_kernel = torch.zeros([1,4,4]) + 1/16
-        #for i in range(3):
-        #    for j in range(3):
-        #        for k in range(3):
-        #            blur_kernel[i][j][k] = 1/27
         copy = torch.clone(sample)
         return torch.from_numpy(scipy.ndimage.convolve(copy, blur_kernel))
+
+class FGSM(Transform):
+    """
+    Perturbs the image to get adversarial inputs
+    Generates attacks using the saved cnn model and inputs the same attacks into the svm and mlp.
+    """
+
+    def getGradient(self, sample: torch.Tensor, label):
+        criterion = nn.CrossEntropyLoss()
+        loss = criterion(cnn_model(sample), label)
+        return grad(outputs = loss, inputs = sample)
+
+
+    def __call__(self, sample: torch.Tensor, label):
+        epsilon = 0.1
+        
+        sign_data_grad = self.getGradient(sample, label).sign()
+        perturbed_sample = sample + epsilon*sign_data_grad
+        perturbed_sample = torch.clamp(perturbed_sample, 0, 1)
+        return perturbed_sample

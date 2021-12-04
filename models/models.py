@@ -4,7 +4,7 @@ Functional definitions for different model types.
 
 # Imports
 import time
-from typing import cast, Tuple, Union
+from typing import cast, List, Tuple, Union
 
 import numpy as np
 import torch
@@ -91,6 +91,40 @@ class MLP(nn.Module):
         return self.model(x)
 
 
+class ChannelPCA:
+    def __init__(self, num_components: int = 33, verbose: int = 1):
+        self._pca_models: List[Union[None, PCA]] = [None, None, None]
+        self._num_components = num_components
+        self._verbose = verbose
+
+    def fit(self, X: np.ndarray) -> object:
+        assert len(X.shape) == 3, "array should have 3 dimensions (num_images, 3, num_pixels)"
+        assert X.shape[1] == 3, "second dimension of array should be 3 (RGB)"
+        for channel_index in range(3):
+            channel = X[:, channel_index, :]
+            channel_pca_model = fit_pca_single(channel, num_components=self._num_components, verbose=self._verbose)
+            self._pca_models[channel_index] = channel_pca_model
+        return self
+
+    def transform(self, X: np.ndarray) -> np.ndarray:
+        assert self._pca_models[0] is not None, "need to fit this model first! (call .fit(X) on a training array X)"
+        assert len(X.shape) == 3, "array should have 3 dimensions (num_images, 3, num_pixels)"
+        assert X.shape[1] == 3, "second dimension of array should be 3 (RGB)"
+        transformed_channels = [self._pca_models[i].transform(X[:, i, :])[:, None, :] for i in range(3)]
+        assert transformed_channels[0].shape == (X.shape[0], 1, self._num_components)
+        return np.concatenate(transformed_channels, axis=1)
+
+    def get_eigenfingers(self) -> np.ndarray:
+        assert self._pca_models[0] is not None, "need to fit this model first! (call .fit(X) on a training array X)"
+        components = [model.components_ for model in self._pca_models]
+        num_components, squared_size = components[0].shape
+        size = round(np.sqrt(squared_size))
+        assert num_components == self._num_components
+        stacked = np.concatenate([fingers.reshape(num_components, 1, size, size) for fingers in components], axis=1)
+        assert stacked.shape[1] == 3 and np.prod(stacked.shape) == num_components * squared_size * 3
+        return stacked
+
+
 class RPCA:
     def __init__(self):
         self.components_ = None
@@ -104,24 +138,43 @@ class RPCA:
         :param X: input matrix (num_samples,
         :return:
         """
+        pass
+
 
 """
 Training functions
 """
 
 
-def fit_pca(image_matrix: np.ndarray, num_components: int, verbose: int = 1) -> PCA:
+def fit_channel_pca(image_matrix: np.ndarray, num_components: int, verbose: int = 1) -> ChannelPCA:
     """
     Create and fit a probabilistic PCA model to an input matrix
 
-    :param image_matrix: numpy array shape (num_images, num_pixels) of flattened images
+    :param image_matrix: numpy array shape (num_images, 3, num_pixels) of flattened images
+    :param num_components: number of dimensions to reduce each channel to
+    :param verbose: if 1, print out time taken to fit and success message (default: 1),
+                    if 2, print out same for each channel as well
+    :return: ChannelPCA model object
+    """
+    t0 = time.time()
+    pca = ChannelPCA(num_components, verbose=int(verbose == 2)).fit(image_matrix)
+    if verbose:
+        print(f"Fit PCA model. took {time.time() - t0:.2f} seconds.")
+    return cast(ChannelPCA, pca)
+
+
+def fit_pca_single(input_matrix: np.ndarray, num_components: int, verbose: int = 1) -> PCA:
+    """
+    Create and fit a probabilistic PCA model to an input matrix
+
+    :param input_matrix: numpy array shape (num_samples, num_features)
     :param num_components: number of dimensions to reduce to
     :param verbose: if not 0, print out time taken to fit and success message (default: 1)
     :return: PCA model object
     """
-    assert len(image_matrix.shape) == 2, "Image matrix has to be flattened and 2-dimensional"
+    assert len(input_matrix.shape) == 2, "Input matrix has to be flattened and 2-dimensional"
     t0 = time.time()
-    pca = PCA(n_components=num_components, svd_solver='randomized').fit(image_matrix)
+    pca = PCA(n_components=num_components, svd_solver='randomized').fit(input_matrix)
     if verbose:
         print(f"Fit PCA model. took {time.time() - t0:.2f} seconds.")
     return cast(PCA, pca)
