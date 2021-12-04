@@ -93,7 +93,7 @@ def spca(M, lam=np.nan, mu=np.nan, tol=10**(-7), maxit=1000, verbose=True):
         E_L =2*(Y_L - L1) + (L1 + S1 - Y_L - Y_S)
         E_S =2*(Y_S - S1) + (L1 + S1 - Y_L - Y_S) 
         dist = np.sqrt(np.linalg.norm(E_L, ord='fro')**2 + np.linalg.norm(E_S, ord='fro')**2)
-        if verbose and k % 1 == 0:
+        if verbose and k % 5 == 0:
             print(f"iter {k}: took {time.time() - time_flag:.2f} seconds, dist = {dist}", flush=True)
         if k >= maxit or dist < tol:
             break

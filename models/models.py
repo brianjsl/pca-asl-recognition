@@ -14,6 +14,8 @@ from sklearn.decomposition import PCA
 from sklearn.svm import SVC
 
 import constants
+from models.rpca.spca import spca
+from utils import normalize_matrix
 
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -110,8 +112,8 @@ class ChannelPCA:
         assert self._pca_models[0] is not None, "need to fit this model first! (call .fit(X) on a training array X)"
         assert len(X.shape) == 3, "array should have 3 dimensions (num_images, 3, num_pixels)"
         assert X.shape[1] == 3, "second dimension of array should be 3 (RGB)"
-        transformed_channels = [self._pca_models[i].transform(X[:, i, :])[:, None, :] for i in range(3)]
-        assert transformed_channels[0].shape == (X.shape[0], 1, self._num_components)
+        transformed_channels = [self._pca_models[i].transform(X[:, i, :]) for i in range(3)]
+        assert transformed_channels[0].shape == (X.shape[0], 3 * self._num_components)
         return np.concatenate(transformed_channels, axis=1)
 
     def get_eigenfingers(self) -> np.ndarray:
@@ -126,24 +128,105 @@ class ChannelPCA:
 
 
 class RPCA:
-    def __init__(self):
-        self.components_ = None
+    def __init__(self,
+                 lam: float = np.nan,
+                 mu: float = np.nan,
+                 tol: float = 10**(-7),
+                 maxit: int = 1000,
+                 verbose: int = 1):
+        self._lam = lam
+        self._mu = mu
+        self._tol = tol
+        self._maxit = maxit
+        self._low_ranks = None
+        self.components = None
+        self._sparse = None
+        self._rank = None
+        self._verbose = verbose
 
-    def fit(self, X: np.ndarray):
-        assert self.components_ is None
+    def fit(self, X: np.ndarray) -> object:
+        assert len(X.shape) == 2, "Input matrix has to be flattened and 2-dimensional"
+        t0 = time.time()
+        L1, S1, k, rank = spca(X, self._lam, self._mu, self._tol, self._maxit, verbose=(self._verbose > 0))
+        self._low_ranks = L1
+        self._sparse = S1
+        self._rank = rank
+        self.components = np.linalg.svd(L1)[2][:rank]
+        assert self.components.shape == (rank, X.shape[1])
+        if self._verbose:
+            print(f"RPCA finished on a channel. Achieved components of rank {rank} in {time.time() - t0:.2f} seconds.")
+        return self
 
     def transform(self, X: np.ndarray) -> np.ndarray:
-        """
-        Project X onto a
-        :param X: input matrix (num_samples,
-        :return:
-        """
-        pass
+        assert len(X.shape) == 2, "Input matrix has to be flattened and 2-dimensional"
+        return X @ self.components.T
+
+
+class ChannelRPCA:
+    def __init__(self, verbose: int = 1):
+        self._rpca_models: List[Union[None, RPCA]] = [None, None, None]
+        self._num_components: List[Union[None, int]] = [None, None, None]
+        self._mu = None
+        self._sigma = None
+        self._verbose = verbose
+
+    def fit(self, X: np.ndarray) -> object:
+        assert len(X.shape) == 3, "array should have 3 dimensions (num_images, 3, num_pixels)"
+        assert X.shape[1] == 3, "second dimension of array should be 3 (RGB)"
+
+        matrix, matrix_mean, matrix_stdev = normalize_matrix(X)
+        self._mu = matrix_mean
+        self._sigma = matrix_stdev
+
+        for channel_index in range(3):
+            channel = matrix[:, channel_index, :]
+            channel_rpca_model = cast(RPCA, RPCA(verbose=self._verbose).fit(channel))
+            self._rpca_models[channel_index] = channel_rpca_model
+        return self
+
+    def transform(self, X: np.ndarray) -> np.ndarray:
+        assert self._rpca_models[0] is not None, "need to fit this model first! (call .fit(X) on a training array X)"
+        assert len(X.shape) == 3, "array should have 3 dimensions (num_images, 3, num_pixels)"
+        assert X.shape[1] == 3, "second dimension of array should be 3 (RGB)"
+        Y = (X - self._mu) / self._sigma
+        transformed_channels = [self._rpca_models[i].transform(Y[:, i, :]) for i in range(3)]
+        stacked_flat_matrix = np.concatenate(transformed_channels, axis=1)
+        assert stacked_flat_matrix.shape == (X.shape[0], sum(self._num_components))
+        return stacked_flat_matrix
+
+    def get_eigenfingers(self) -> np.ndarray:
+        assert self._rpca_models[0] is not None, "need to fit this model first! (call .fit(X) on a training array X)"
+        components = [model.components for model in self._rpca_models]
+        _, squared_size = components[0].shape
+        size = round(np.sqrt(squared_size))
+        num_components = max(self._num_components)
+        eigenfingers_array = np.zeros((num_components, 3, size, size), dtype=np.float)
+        for i, component_array in enumerate(components):
+            num_features = component_array.shape[0]
+            eigenfingers_array[:num_features, i] = component_array.reshape(num_features, size, size)
+        return eigenfingers_array
 
 
 """
 Training functions
 """
+
+
+def fit_channel_rpca(image_matrix: np.ndarray, num_components: int, verbose: int = 1) -> ChannelRPCA:
+    """
+    Create and fit a probabilistic RPCA model to an input matrix
+
+    :param image_matrix: numpy array shape (num_images, 3, num_pixels) of flattened images
+    :param num_components: ignored
+    :param verbose: if 1, print out time taken to fit and success message (default: 1),
+                    if 2, print out same for each channel as well
+    :return: ChannelRPCA model object
+    """
+    t0 = time.time()
+    rpca = ChannelRPCA(verbose=int(verbose == 2)).fit(image_matrix)
+    if verbose:
+        print(f"Fit RPCA model. took {time.time() - t0:.2f} seconds.")
+    return cast(ChannelRPCA, rpca)
 
 
 def fit_channel_pca(image_matrix: np.ndarray, num_components: int, verbose: int = 1) -> ChannelPCA:
