@@ -138,19 +138,15 @@ class RPCA:
         self._mu = mu
         self._tol = tol
         self._maxit = maxit
-        self._low_ranks = None
         self.components = None
-        self._sparse = None
-        self._rank = None
+        self.rank = None
         self._verbose = verbose
 
     def fit(self, X: np.ndarray) -> object:
         assert len(X.shape) == 2, "Input matrix has to be flattened and 2-dimensional"
         t0 = time.time()
         L1, S1, k, rank = spca(X, self._lam, self._mu, self._tol, self._maxit, verbose=(self._verbose > 0))
-        self._low_ranks = L1
-        self._sparse = S1
-        self._rank = rank
+        self.rank = rank
         self.components = np.linalg.svd(L1)[2][:rank]
         assert self.components.shape == (rank, X.shape[1])
         if self._verbose:
@@ -182,6 +178,7 @@ class ChannelRPCA:
             channel = matrix[:, channel_index, :]
             channel_rpca_model = cast(RPCA, RPCA(verbose=self._verbose).fit(channel))
             self._rpca_models[channel_index] = channel_rpca_model
+            self._num_components[channel_index] = channel_rpca_model.rank
         return self
 
     def transform(self, X: np.ndarray) -> np.ndarray:

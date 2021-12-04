@@ -41,7 +41,7 @@ if PCA_LOAD_SAVED_MODEL:
     pca_model = joblib.load(PCA_MODEL_SAVE_PATH)
 else:
     print(f"Fitting {method_str.upper()} model.")
-    pca_model = pca_method(train_image_matrix, num_components=NUM_PCA_COMPONENTS, verbose=1)
+    pca_model = pca_method(train_image_matrix, num_components=NUM_PCA_COMPONENTS, verbose=2)
     joblib.dump(pca_model, PCA_MODEL_SAVE_PATH)
 
 # eigenfingers = pca_model.get_eigenfingers()
