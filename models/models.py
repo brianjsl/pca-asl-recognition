@@ -4,7 +4,7 @@ Functional definitions for different model types.
 
 # Imports
 import time
-from typing import cast, List, Tuple, Union
+from typing import cast, Any, Dict, List, Tuple, Union
 
 import numpy as np
 import torch
@@ -126,6 +126,20 @@ class ChannelPCA:
         assert stacked.shape[1] == 3 and np.prod(stacked.shape) == num_components * squared_size * 3
         return stacked
 
+    def get_state(self) -> Dict[str, Any]:
+        assert self._pca_models[0] is not None, "why save an unfitted model"
+        return {
+            "models": self._pca_models[:],
+            "num_components": self._num_components,
+            "verbose": self._verbose,
+        }
+
+    @staticmethod
+    def load_state(state: Dict[str, Any]) -> object:
+        model = ChannelPCA(state["num_components"], state["verbose"])
+        model._pca_models = state["models"]
+        return model
+
 
 class RPCA:
     def __init__(self,
@@ -156,6 +170,17 @@ class RPCA:
     def transform(self, X: np.ndarray) -> np.ndarray:
         assert len(X.shape) == 2, "Input matrix has to be flattened and 2-dimensional"
         return X @ self.components.T
+
+    def get_state(self) -> Tuple[Any, ...]:
+        return self._lam, self._mu, self._tol, self._maxit, self.components, self.rank, self._verbose
+
+    @staticmethod
+    def load_state(state: Tuple[Any, ...]) -> object:
+        lam, mu, tol, maxit, components, rank, verbose = state
+        model = RPCA(lam, mu, tol, maxit, verbose)
+        model.components = components
+        model.rank = rank
+        return model
 
 
 class ChannelRPCA:
@@ -202,6 +227,24 @@ class ChannelRPCA:
             num_features = component_array.shape[0]
             eigenfingers_array[:num_features, i] = component_array.reshape(num_features, size, size)
         return eigenfingers_array
+
+    def get_state(self) -> Dict[str, Any]:
+        assert self._rpca_models[0] is not None, "why save an unfitted model"
+        return {
+            "models": [model.get_state() for model in self._rpca_models],
+            "num_components": self._num_components[:],
+            "mu": self._mu,
+            "sigma": self._sigma,
+            "verbose": self._verbose,
+        }
+
+    @staticmethod
+    def load_state(state: Dict[str, Any]) -> object:
+        model = ChannelRPCA(state["verbose"])
+        model._rpca_models = [RPCA.load_state(model_state) for model_state in state["models"]]
+        model._num_components = state["num_components"]
+        model._mu, model._sigma = state["mu"], state["sigma"]
+        return model
 
 
 """
@@ -327,9 +370,14 @@ def fit_mlp(train: np.ndarray,
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
     for epoch in range(num_epochs):
+        total_loss = 0
+        indices = np.arange(train.shape[0])
+        np.random.shuffle(indices)
+        shuffled_train = train[indices]
+        shuffled_labels = labels[indices]
         for i in range(num_batches):
-            images = torch.FloatTensor(train[i * batch_size: (i + 1) * batch_size]).to(device)
-            labs = torch.LongTensor(labels[i * batch_size: (i + 1) * batch_size]).to(device)
+            images = torch.FloatTensor(shuffled_train[i * batch_size: (i + 1) * batch_size]).to(device)
+            labs = torch.LongTensor(shuffled_labels[i * batch_size: (i + 1) * batch_size]).to(device)
 
             # Forward pass
             outputs = model(images)
@@ -338,10 +386,11 @@ def fit_mlp(train: np.ndarray,
             # Backward and optimize
             optimizer.zero_grad()
             loss.backward()
+            total_loss += loss * images.shape[0]
             optimizer.step()
 
-            if verbose and (i + 1) % 50 == 0:
-                print(f"Epoch [{epoch + 1}/{num_epochs}], Batch [{i + 1}/{num_batches}], Loss: {loss.item():.4f}")
+        if verbose:
+            print(f"Epoch [{epoch + 1}/{num_epochs}], Loss: {total_loss / train.shape[0]:.4f}")
 
     if verbose:
         print(f"Finished training MLP. Took {time.time() - t0:.2f} seconds.")
