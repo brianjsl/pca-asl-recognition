@@ -51,7 +51,7 @@ pca.fit(train_dataset)
 X = pca.transform(train_dataset)
 
 #eigenfingers
-eigenfingers = pca.components_.reshape((100,200,200))
-titles = ["eigenfingers %i" % i for i in range(len(eigenfingers))]
-plot_images(eigenfingers, titles, 200, 200)
+# eigenfingers = pca.components_.reshape((100,200,200))
+# titles = ["eigenfingers %i" % i for i in range(len(eigenfingers))]
+# plot_images(eigenfingers, titles, 200, 200)
 
