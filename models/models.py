@@ -195,7 +195,7 @@ class ChannelRPCA:
         assert len(X.shape) == 3, "array should have 3 dimensions (num_images, 3, num_pixels)"
         assert X.shape[1] == 3, "second dimension of array should be 3 (RGB)"
 
-        matrix, matrix_mean, matrix_stdev = normalize_matrix(X)
+        matrix, matrix_mean, matrix_stdev = normalize_matrix(torch.Tensor.float(X))
         self._mu = matrix_mean
         self._sigma = matrix_stdev
 

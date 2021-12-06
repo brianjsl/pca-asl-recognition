@@ -12,7 +12,7 @@ import torch
 from models.rpca.utility import thres
 
 
-def spca(M, lam=float('nan'), mu=float('nan'), tol=10**(-7), maxit=1000, verbose=True):
+def spca(M, lam=np.nan, mu=np.nan, tol=10**(-7), maxit=1000, verbose=True):
     """ Stable Principal Component Pursuit (Zhou et al., 2009)
     
     This code solves the following optimization problem
@@ -58,10 +58,10 @@ def spca(M, lam=float('nan'), mu=float('nan'), tol=10**(-7), maxit=1000, verbose
     """
     # parameter setting
     m, n = M.shape
-    if torch.isnan(mu):
-        mu = torch.sqrt(2*max(m,n))
-    if torch.isnan(lam):
-        lam = 1.0/torch.sqrt(max(m,n))
+    if np.isnan(mu):
+        mu = np.sqrt(2*max(m,n))
+    if np.isnan(lam):
+        lam = 1.0/np.sqrt(max(m,n))
 
     # initialization
     L0 = torch.zeros((m,n)) 
@@ -85,16 +85,16 @@ def spca(M, lam=float('nan'), mu=float('nan'), tol=10**(-7), maxit=1000, verbose
         rank = (sigmas > mu_iter/2).sum()
         Sigma = torch.diag(sigmas[0:rank] - mu_iter/2)
         L0 = L1
-        L1 = torch.dot(torch.dot(U[:,0:rank], Sigma), V[0:rank,:])
+        L1 = torch.mm(torch.mm(U[:,0:rank], Sigma), V[0:rank,:])
         G_S = Y_S - 0.5*(Y_L + Y_S - M)
         S0 = S1
         S1 = thres(G_S, lam*mu_iter/2)
-        t1, t0 = (torch.sqrt(t1**2+1) + 1)/2, t1
+        t1, t0 = (np.sqrt(t1**2+1) + 1)/2, t1
         
         # stop the algorithm when converge
         E_L =2*(Y_L - L1) + (L1 + S1 - Y_L - Y_S)
         E_S =2*(Y_S - S1) + (L1 + S1 - Y_L - Y_S) 
-        dist = torch.sqrt(torch.linalg.norm(E_L, ord='fro')**2 + torch.linalg.norm(E_S, ord='fro')**2)
+        dist = np.sqrt(torch.linalg.norm(E_L, ord='fro')**2 + torch.linalg.norm(E_S, ord='fro')**2)
         if verbose and k % 5 == 0:
             print(f"iter {k}: took {time.time() - time_flag:.2f} seconds, dist = {dist}", flush=True)
         if k >= maxit or dist < tol:
@@ -103,7 +103,7 @@ def spca(M, lam=float('nan'), mu=float('nan'), tol=10**(-7), maxit=1000, verbose
             k += 1
         counter += 1
         if (counter % 1000):
-            print(counter+" iterations of RPCA")   
+            print(str(counter)+" iterations of RPCA")   
     return L1, S1, k, rank
         
 
