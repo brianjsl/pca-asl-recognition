@@ -6,14 +6,22 @@ Main script for training PCA + kernel SVM
 import time
 
 import joblib
+import pickle as pkl
 
 from load_data_common import load_train_matrices, load_test_matrices
-from models.models import fit_channel_pca, fit_svm
+from models.models import ChannelPCA, ChannelRPCA, fit_channel_pca, fit_channel_rpca, fit_svm
 from utils import reshape_matrix_flat, reshape_matrix_channels
 
 
-PCA_MODEL_SAVE_PATH = "models/saved_models/pca.pt"
-SVM_MODEL_SAVE_PATH = "models/saved_models/svm.pt"
+USE_RPCA = False  # set false for PCA
+method_str = "rpca" if USE_RPCA else "pca"
+pca_method = fit_channel_rpca if USE_RPCA else fit_channel_pca
+pca_class = ChannelRPCA if USE_RPCA else ChannelPCA
+print(f"Running experiments for {method_str.upper()} with SVM")
+
+
+PCA_MODEL_SAVE_PATH = f"models/saved_models/{method_str}.pt"
+SVM_MODEL_SAVE_PATH = f"models/saved_models/{method_str}_svm.pt"
 PCA_LOAD_SAVED_MODEL = False
 SVM_LOAD_SAVED_MODEL = False
 
@@ -31,21 +39,24 @@ print(f"Loaded data in {time.time() - t0:.2f} seconds.")
 
 # Fit PCA if desired
 if PCA_LOAD_SAVED_MODEL:
-    print("Loading saved PCA.")
-    pca_model = joblib.load(PCA_MODEL_SAVE_PATH)
+    print(f"Loading saved {method_str.upper()}.")
+    with open(PCA_MODEL_SAVE_PATH, "rb") as f:
+        pca_model = pca_class.load_state(pkl.load(f))
 else:
-    print("Fitting PCA model.")
-    pca_model = fit_channel_pca(train_image_matrix, num_components=NUM_PCA_COMPONENTS, verbose=1)
-    joblib.dump(pca_model, PCA_MODEL_SAVE_PATH)
+    print(f"Fitting {method_str.upper()} model.")
+    pca_model = pca_method(train_image_matrix, num_components=NUM_PCA_COMPONENTS, verbose=1)
+
+    with open(PCA_MODEL_SAVE_PATH, "wb") as f:
+        pkl.dump(pca_model.get_state(), f)
 
 # eigenfingers = pca_model.get_eigenfingers()
 # print(eigenfingers.shape)
 # print(eigenfingers)
 # raise NotImplementedError
 
-print("Transforming training data using PCA model.")
+print(f"Transforming training data using {method_str.upper()} model.")
 t0 = time.time()
-reduced_image_matrix = reshape_matrix_flat(pca_model.transform(train_image_matrix))
+reduced_image_matrix = pca_model.transform(train_image_matrix)
 print(f"Done, took {time.time() - t0:.2f} seconds.")
 
 # Fit SVM if desired
@@ -75,7 +86,7 @@ dataset_names = sorted(test_matrices.keys())
 for ds_name in dataset_names:
     test_image_matrix, test_label_matrix = test_matrices[ds_name]
     reduced_test_image_matrix = pca_model.transform(reshape_matrix_channels(test_image_matrix))
-    flat_reduced_matrix = reshape_matrix_flat(reduced_test_image_matrix)
+    flat_reduced_matrix = reduced_test_image_matrix
     print(f"{ds_name} accuracy: {svm_model.score(flat_reduced_matrix, test_label_matrix):.4f}")
 
 print("Done.")

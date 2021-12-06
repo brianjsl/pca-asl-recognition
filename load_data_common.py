@@ -15,7 +15,7 @@ import pickle as pkl
 from torch.utils.data import DataLoader
 
 from data_loader.data_loader import ASLDataset, get_datasets
-from data_loader.transforms import Inversion, NormalNoise, Rotate, Blur, FGSM
+from data_loader.transforms import Inversion, NormalNoise, Rotate, Blur
 from utils import (
     add_resize_to_config,
     dataset_to_matrices,
@@ -44,7 +44,7 @@ def get_data_config(resized: Union[Tuple[int, int], None] = None) -> Dict[str, A
         "rotate": Rotate(),
         # TODO: add other ones when we're ready to test them
         "blur": Blur(),
-        "fgsm": FGSM()
+        # "fgsm": FGSM()
     }
     if resized is not None:
         resized_data_config = add_resize_to_config(data_config, resized)  # add resize
