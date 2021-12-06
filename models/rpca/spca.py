@@ -8,10 +8,11 @@ Created on Fri Feb 03 14:25:59 2017
 import time
 
 import numpy as np
+import torch 
 from models.rpca.utility import thres
 
 
-def spca(M, lam=np.nan, mu=np.nan, tol=10**(-7), maxit=1000, verbose=True):
+def spca(M, lam=float('nan'), mu=float('nan'), tol=10**(-7), maxit=1000, verbose=True):
     """ Stable Principal Component Pursuit (Zhou et al., 2009)
     
     This code solves the following optimization problem
@@ -57,49 +58,52 @@ def spca(M, lam=np.nan, mu=np.nan, tol=10**(-7), maxit=1000, verbose=True):
     """
     # parameter setting
     m, n = M.shape
-    if np.isnan(mu):
-        mu = np.sqrt(2*max(m,n))
-    if np.isnan(lam):
-        lam = 1.0/np.sqrt(max(m,n))
+    if torch.isnan(mu):
+        mu = torch.sqrt(2*max(m,n))
+    if torch.isnan(lam):
+        lam = 1.0/torch.sqrt(max(m,n))
 
     # initialization
-    L0 = np.zeros((m,n)) 
-    L1 = np.zeros((m,n)) 
-    S0 = np.zeros((m,n))
-    S1 = np.zeros((m,n))
+    L0 = torch.zeros((m,n)) 
+    L1 = torch.zeros((m,n)) 
+    S0 = torch.zeros((m,n))
+    S1 = torch.zeros((m,n))
     t0 = 1
     t1 = 1
     mu_iter = mu
     k = 1
     time_flag = None
     
+    counter = 0
     while 1:
         if verbose:
             time_flag = time.time()
         Y_L = L1 + (t0-1)/t1*(L1-L0)
         Y_S = S1 + (t0-1)/t1*(S1-S0)
         G_L = Y_L - 0.5*(Y_L + Y_S - M)
-        U, sigmas, V = np.linalg.svd(G_L, full_matrices=False);
+        U, sigmas, V = torch.linalg.svd(G_L, full_matrices=False);
         rank = (sigmas > mu_iter/2).sum()
-        Sigma = np.diag(sigmas[0:rank] - mu_iter/2)
+        Sigma = torch.diag(sigmas[0:rank] - mu_iter/2)
         L0 = L1
-        L1 = np.dot(np.dot(U[:,0:rank], Sigma), V[0:rank,:])
+        L1 = torch.dot(torch.dot(U[:,0:rank], Sigma), V[0:rank,:])
         G_S = Y_S - 0.5*(Y_L + Y_S - M)
         S0 = S1
         S1 = thres(G_S, lam*mu_iter/2)
-        t1, t0 = (np.sqrt(t1**2+1) + 1)/2, t1
+        t1, t0 = (torch.sqrt(t1**2+1) + 1)/2, t1
         
         # stop the algorithm when converge
         E_L =2*(Y_L - L1) + (L1 + S1 - Y_L - Y_S)
         E_S =2*(Y_S - S1) + (L1 + S1 - Y_L - Y_S) 
-        dist = np.sqrt(np.linalg.norm(E_L, ord='fro')**2 + np.linalg.norm(E_S, ord='fro')**2)
+        dist = torch.sqrt(torch.linalg.norm(E_L, ord='fro')**2 + torch.linalg.norm(E_S, ord='fro')**2)
         if verbose and k % 5 == 0:
             print(f"iter {k}: took {time.time() - time_flag:.2f} seconds, dist = {dist}", flush=True)
         if k >= maxit or dist < tol:
             break
         else:
             k += 1
-            
+        counter += 1
+        if (counter % 1000):
+            print(counter+" iterations of RPCA")   
     return L1, S1, k, rank
         
 
