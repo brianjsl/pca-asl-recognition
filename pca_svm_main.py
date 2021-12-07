@@ -11,14 +11,16 @@ import pickle as pkl
 from load_data_common import load_train_matrices, load_test_matrices
 from models.models import ChannelPCA, ChannelRPCA, fit_channel_pca, fit_channel_rpca, fit_svm
 from utils import reshape_matrix_flat, reshape_matrix_channels
+import torch
 
-
-USE_RPCA = False  # set false for PCA
+USE_RPCA = True  # set false for PCA
 method_str = "rpca" if USE_RPCA else "pca"
 pca_method = fit_channel_rpca if USE_RPCA else fit_channel_pca
 pca_class = ChannelRPCA if USE_RPCA else ChannelPCA
 print(f"Running experiments for {method_str.upper()} with SVM")
 
+# gpu support
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 PCA_MODEL_SAVE_PATH = f"models/saved_models/{method_str}.pt"
 SVM_MODEL_SAVE_PATH = f"models/saved_models/{method_str}_svm.pt"
@@ -35,6 +37,8 @@ print("Loading training data.")
 t0 = time.time()
 train_image_matrix, train_label_matrix = load_train_matrices()
 train_image_matrix = reshape_matrix_channels(train_image_matrix)
+train_image_matrix = torch.from_numpy(train_image_matrix)
+train_image_matrix = train_image_matrix.to(device)
 print(f"Loaded data in {time.time() - t0:.2f} seconds.")
 
 # Fit PCA if desired

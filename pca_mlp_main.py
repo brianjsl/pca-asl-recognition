@@ -40,16 +40,16 @@ train_image_matrix = reshape_matrix_channels(train_image_matrix)
 print(f"Loaded data in {time.time() - t0:.2f} seconds.")
 
 # Fit PCA if desired
-if PCA_LOAD_SAVED_MODEL:
-    print(f"Loading saved {method_str.upper()}.")
-    with open(PCA_MODEL_SAVE_PATH, "rb") as f:
-        pca_model = pca_class.load_state(pkl.load(f))
-else:
-    print(f"Fitting {method_str.upper()} model.")
-    pca_model = pca_method(train_image_matrix, num_components=NUM_PCA_COMPONENTS, verbose=1)
+# if PCA_LOAD_SAVED_MODEL:
+#     print(f"Loading saved {method_str.upper()}.")
+#     with open(PCA_MODEL_SAVE_PATH, "rb") as f:
+#         pca_model = pca_class.load_state(pkl.load(f))
+# else:
+#     print(f"Fitting {method_str.upper()} model.")
+#     pca_model = pca_method(train_image_matrix, num_components=NUM_PCA_COMPONENTS, verbose=1)
 
-    with open(PCA_MODEL_SAVE_PATH, "wb") as f:
-        pkl.dump(pca_model.get_state(), f)
+#     with open(PCA_MODEL_SAVE_PATH, "wb") as f:
+#         pkl.dump(pca_model.get_state(), f)
 
 # eigenfingers = pca_model.get_eigenfingers()
 # print(eigenfingers.shape)
