@@ -91,8 +91,11 @@ print("Running accuracy tests...")
 dataset_names = sorted(test_matrices.keys())
 for ds_name in dataset_names:
     test_image_matrix, test_label_matrix = test_matrices[ds_name]
+    test_image_matrix = torch.from_numpy(test_image_matrix)
+    test_image_matrix = test_image_matrix.to(device)
     reduced_test_image_matrix = pca_model.transform(reshape_matrix_channels(test_image_matrix))
     flat_reduced_matrix = reduced_test_image_matrix
+    flat_reduced_matrix = flat_reduced_matrix.cpu()
     print(f"{ds_name} accuracy: {svm_model.score(flat_reduced_matrix, test_label_matrix):.4f}")
 
 
@@ -107,11 +110,13 @@ print("Getting adversarial samples..")
 adv_image_set = base_image_set + fgsm(cnn_model, base_image_set, torch.tensor(base_label_matrix), epsilon=10)
 print("Converting adversarial samples to matrix..")
 adv_image_matrix = reshape_matrix_channels(adv_image_set)
+adv_image_matrix = adv_image_matrix.to(device)
 print("Converting to low rank")
 reduced_adv_image_matrix = pca_model.transform(adv_image_matrix)
 #Test on adversarial data
 print("Running accuracy tests on adversarial inputs...")
 flat_reduced_matrix = reduced_adv_image_matrix
+flat_reduced_matrix = flat_reduced_matrix.cpu()
 print(f"fgsm accuracy: {svm_model.score(flat_reduced_matrix, base_label_matrix):.4f}")
 
 print("Done.")
