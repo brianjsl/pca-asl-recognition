@@ -11,7 +11,8 @@ A comparison of the following models to predict static ASL sign language symbols
 
 ## Instructions
 1. Run `load_data_common.py` (generates a static train/test split)
-2. Run either `cnn_main.py`, `pca_mlp_main.py`, or `pca_svm_main.py`.
+2. Run `cnn_main.py`.
+3. Run `load_data_fgsm.py`, `pca_mlp_main.py`, or `pca_svm_main.py`
     - Use the flags at the top of each file (ending in `LOAD_SAVED_MODEL`) to specify whether to train new models 
     (False) or load saved versions (which are automatically created when new models are trained).
     
