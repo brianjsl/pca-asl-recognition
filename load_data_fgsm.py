@@ -55,78 +55,36 @@ def fgsm(model, X, y, epsilon=0.1):
     delta = epsilon*torch.sign(X_clone.grad)
     return delta
 
-def load_fgsm_dataloaders() -> Dict[str, DataLoader]:
-    with open(os.path.join(DATA_SAVE_PATH, FGSM_DATALOADER_FILE), "rb") as f:
-        data = pkl.load(f)
-    return data
 
+#Test CNN accuracy on samples perturbed with FGSM
 
-def load_fgsm_matrices() -> Dict[str, Tuple[np.ndarray, np.ndarray]]:
-    with open(os.path.join(DATA_SAVE_PATH, FGSM_MATRICES_FILE), "rb") as f:
-        data = pkl.load(f)
-    return data
-
-def generate_and_save_fgsm_data():
-  """
-    Get datasets, data loaders, and flat matrices
-    Save them using pickle
-    :return: dictionary with keys [
-        "fgsm_dataloaders",
-        "fgsm_matrices"
-    ]
-    """
-
+if __name__ == "__main__":
+  print("Running accuracy tests...")
   #get test loader
   test_loaders = load_test_dataloaders()
 
   #get base test loader
-  fgsm_loader = test_loaders["base"]
+  base_loader = test_loaders["base"]
 
   #convert to adversarial test loader
-  epsilon = 10 #could change this to get a perturbation with more magnitude
+  epsilon = 1 #could change this to get a perturbation with more magnitude
 
   print("Obtaining adversarial examples.")
 
-  for i, (images, labels) in enumerate(fgsm_loader):
+  num_samples = 0
+  num_correct = 0
+
+  for i, (images, labels) in enumerate(base_loader):
     images = images.float().to(device)
     labels = labels.to(device)
-    images = images + fgsm(model_cnn, images, labels, epsilon)
-    
-  # Flatten datasets
-  fgsm_dataset = fgsm_loader.dataset
-  fgsm_loaders_and_matrices = {
-    #"fgsm": dataset_to_matrices(fgsm_loader["fgsm"], flatten=True, shuffle=True, batch_size=64)
-      "fgsm": dataset_to_matrices(fgsm_dataset, flatten=True, shuffle=True, batch_size=64)
-  }
-  fgsm_loader = {t: loader for t, (loader, _, _) in fgsm_loaders_and_matrices.items()}
-  fgsm_matrices = {t: (m1, m2) for t, (_, m1, m2) in fgsm_loaders_and_matrices.items()}
-  # test_loaders_and_matrices = {
-  #       t: dataset_to_matrices(ds, flatten=True, shuffle=True, batch_size=64)
-  #       for t, ds in test_datasets.items()
-  #   }
-  # Save everything
-  with open(os.path.join(DATA_SAVE_PATH, FGSM_DATALOADER_FILE), "wb") as f:
-    pkl.dump(fgsm_loader, f)
-  with open(os.path.join(DATA_SAVE_PATH, FGSM_MATRICES_FILE), "wb") as f:
-    pkl.dump(fgsm_matrices, f)
+    adv_images = images + fgsm(model_cnn, images, labels, epsilon)
 
-  return {
-    "test_dataloaders": fgsm_loader,
-    "test_matrices": fgsm_matrices,
-  }
+    # Forward pass
+    outputs = model_cnn(adv_images)
+    _, predicted = torch.max(outputs, 1)
+    correct = cast(torch.Tensor, predicted == labels)
+    num_samples += labels.size(0)
+    num_correct += correct.sum().item()
 
+  print("Accuracy: " + str(num_correct / num_samples))  
 
-#either generate fgsm loader and matrices or test accuracy on adversarial examples for cnn
-TEST_FGSM_CNN = True
-if __name__ == "__main__":
-  if TEST_FGSM_CNN:
-    print("Running accuracy tests...")
-    fgsm_loader = load_fgsm_dataloaders()
-    dataset_names = sorted(fgsm_loader.keys())
-    for ds_name in dataset_names:
-      loader = fgsm_loader[ds_name]
-      print(f"{ds_name} accuracy: {cnn_accuracy(model_cnn, loader):.4f}")
-    print("Done.")
-  else:
-    generate_and_save_fgsm_data()
-    print("Done.")
