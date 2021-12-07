@@ -10,10 +10,12 @@ import pickle as pkl
 
 from load_data_common import load_train_matrices, load_test_matrices
 from models.models import ChannelPCA, ChannelRPCA, fit_channel_pca, fit_channel_rpca, fit_svm
-from utils import reshape_matrix_flat, reshape_matrix_channels
+from utils import reshape_matrix_flat, reshape_matrix_channels, reshape_matrix_image
+from cnn_loader import model as cnn_model
+from load_data_fgsm import fgsm
 import torch
 
-USE_RPCA = True  # set false for PCA
+USE_RPCA = False  # set false for PCA
 method_str = "rpca" if USE_RPCA else "pca"
 pca_method = fit_channel_rpca if USE_RPCA else fit_channel_pca
 pca_class = ChannelRPCA if USE_RPCA else ChannelPCA
@@ -24,8 +26,8 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 PCA_MODEL_SAVE_PATH = f"models/saved_models/{method_str}.pt"
 SVM_MODEL_SAVE_PATH = f"models/saved_models/{method_str}_svm.pt"
-PCA_LOAD_SAVED_MODEL = False
-SVM_LOAD_SAVED_MODEL = False
+PCA_LOAD_SAVED_MODEL = True
+SVM_LOAD_SAVED_MODEL = True
 
 assert not SVM_LOAD_SAVED_MODEL or PCA_LOAD_SAVED_MODEL, "if SVM is loaded, PCA should also be loaded"
 
@@ -93,4 +95,24 @@ for ds_name in dataset_names:
     flat_reduced_matrix = reduced_test_image_matrix
     print(f"{ds_name} accuracy: {svm_model.score(flat_reduced_matrix, test_label_matrix):.4f}")
 
+
+#first get base data
+print("Getting base data..")
+base_image_matrix, base_label_matrix = test_matrices["base"]
+#reshape base_images
+print("Reshaping data..")
+base_image_set = torch.tensor(reshape_matrix_image(base_image_matrix))
+#get adversarial image set
+print("Getting adversarial samples..")
+adv_image_set = base_image_set + fgsm(cnn_model, base_image_set, torch.tensor(base_label_matrix), epsilon=10)
+print("Converting adversarial samples to matrix..")
+adv_image_matrix = reshape_matrix_channels(adv_image_set)
+print("Converting to low rank")
+reduced_adv_image_matrix = pca_model.transform(adv_image_matrix)
+#Test on adversarial data
+print("Running accuracy tests on adversarial inputs...")
+flat_reduced_matrix = reduced_adv_image_matrix
+print(f"fgsm accuracy: {svm_model.score(flat_reduced_matrix, base_label_matrix):.4f}")
+
 print("Done.")
+
