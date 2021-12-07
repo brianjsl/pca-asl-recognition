@@ -124,8 +124,3 @@ flat_reduced_matrix = reduced_adv_image_matrix
 print(f"fgsm accuracy: {mlp_accuracy(mlp_model, flat_reduced_matrix, base_label_matrix):.4f}")
 
 print("Done.")
-
-#I think, instead of trying to mess with dataloaders, just directly load in the test set as a matrix (load_test_matrices)
-#reshape it using one of the functions from utils to n x 3 x 32 x 32
-#and pass that into your fgsm function
-#then add it to the test matrix directl
