@@ -14,7 +14,6 @@ from load_data_fgsm import fgsm
 from load_data_common import load_train_matrices, load_test_matrices
 from models.models import ChannelPCA, ChannelRPCA, device, fit_channel_pca, fit_channel_rpca, fit_mlp, mlp_accuracy
 from utils import reshape_matrix_flat, reshape_matrix_channels, reshape_matrix_image
-from load_data_fgsm import load_fgsm_matrices
 import numpy as np
 from cnn_loader import model as cnn_model
 
@@ -113,7 +112,7 @@ print("Reshaping data..")
 base_image_set = torch.tensor(reshape_matrix_image(base_image_matrix))
 #get adversarial image set
 print("Getting adversarial samples..")
-adv_image_set = base_image_set + fgsm(cnn_model, base_image_set, torch.tensor(base_label_matrix), epsilon=10)
+adv_image_set = base_image_set + fgsm(cnn_model, base_image_set, torch.tensor(base_label_matrix), epsilon=0.5)
 print("Converting adversarial samples to matrix..")
 adv_image_matrix = reshape_matrix_channels(adv_image_set)
 print("Converting to low rank")
